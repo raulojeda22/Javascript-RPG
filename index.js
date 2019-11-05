@@ -105,8 +105,6 @@ function mapGenerate() {
                 map[x][y] = "rock";
             } else if (randomNumber > 7500) {
                 map[x][y] = "skull";
-            } else if (randomNumber > 7000) {
-                map[x][y] = "groundLog";
             } else {
                 map[x][y] = undefined;
             }
