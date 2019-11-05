@@ -16,20 +16,24 @@ var character = {
     width: 100,
     height: 200,
     moveSpeed: 7,
-    positionX: 0,
-    positionY: 0,
+    positionX: canvas.width/2,
+    positionY: canvas.height/2,
     spritePositionsX: [0, 100, 200, 300],
     spritePositionsY: [0, 200, 400, 600],
     moving: false,
     currentSprite: 0,
-    ready: false
+    ready: false,
+    direction: 0
 }
 
-var characterImage = document.createElement('img');
+var characterImage = new Image();
 characterImage.src = "sprites/characterMovement.png";
 characterImage.onload = function(){
     character.ready = true;
 };
+
+var backgroundImage = new Image();
+backgroundImage.src = "sprites/grass.png";
 
 window.onkeyup = function (e) { console.log(e.keyCode); keys[e.keyCode] = false; }
 window.onkeydown = function (e) { console.log(e.keyCode); keys[e.keyCode] = true; }
@@ -40,27 +44,27 @@ function draw() {
     clearCanvas();
     context.beginPath();
     context.textAlign = "center";
-    //context.fillStyle = "green";
-    //context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    var pattern = context.createPattern(backgroundImage, 'repeat'); // Create a pattern with this image, and set it to "repeat".
+    context.fillStyle = pattern;
+    context.fillRect(0, 0, canvas.width, canvas.height); // context.fillRect(x, y, width, height);
+
     character.spriteX = character.spritePositionsX[character.currentSprite];
     character.spriteY = character.spritePositionsY[character.direction];
-    context.clearRect(character.positionX, character.positionY, character.width, character.height);
-    if (character.ready) {
-        context.drawImage(characterImage, character.spriteX, character.spriteY, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
-        if (character.moving) {
-            if (character.currentSprite >= 2) {
-                character.currentSprite = 0;
-            } else {
-                if (framesByImage == 0) {
-                    character.currentSprite++;
-                    framesByImage = 5;
-                } else {
-                    framesByImage--;
-                }
-            }
-        } else {
+    context.drawImage(characterImage, character.spriteX, character.spriteY, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
+    if (character.moving) {
+        if (character.currentSprite >= 2) {
             character.currentSprite = 0;
+        } else {
+            if (framesByImage == 0) {
+                character.currentSprite++;
+                framesByImage = 5;
+            } else {
+                framesByImage--;
+            }
         }
+    } else {
+        character.currentSprite = 0;
     }
 }
 
