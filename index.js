@@ -9,6 +9,14 @@ var keyCode = {
 }
 var canvas = document.getElementById('canvas');
 var framesByImage = 5;
+var mapChanged = false;
+
+
+var maps = {
+    "0,0": undefined
+}
+
+var currentMap = "0,0"; //x, y
 
 var character = {
     spriteX: 0,
@@ -44,10 +52,19 @@ function draw() {
     clearCanvas();
     context.beginPath();
     context.textAlign = "center";
-    
     var pattern = context.createPattern(backgroundImage, 'repeat'); // Create a pattern with this image, and set it to "repeat".
     context.fillStyle = pattern;
     context.fillRect(0, 0, canvas.width, canvas.height); // context.fillRect(x, y, width, height);
+
+    maps[currentMap].forEach(function(y, indexY) {
+        y.forEach(function(image, indexX) {
+            if (image != undefined) {
+                var thisImage = new Image();
+                thisImage.src = "sprites/" + image + ".png";
+                context.drawImage(thisImage, 0, 0, thisImage.width, thisImage.height, indexX * 192, indexY * 108,  thisImage.width, thisImage.height);
+            }
+        })
+    })
 
     character.spriteX = character.spritePositionsX[character.currentSprite];
     character.spriteY = character.spritePositionsY[character.direction];
@@ -70,6 +87,35 @@ function draw() {
 
 function clearCanvas () {
     canvas.width = canvas.width;
+}
+
+function mapGenerate() {
+    var x = 0;
+    var y = 0;
+    var map = [];
+    for (x = 0; x < canvas.width / 192; x++) {
+        map[x] = [];
+        for (y = 0; y < canvas.height / 108; y++) {
+            randomNumber = Math.floor(Math.random() * 10000);
+            if (randomNumber > 9995) {
+                map[x][y] = "baby";
+            } else if (randomNumber > 8500) {
+                map[x][y] = "flowers";
+            } else if (randomNumber > 8000) {
+                map[x][y] = "rock";
+            } else if (randomNumber > 7500) {
+                map[x][y] = "skull";
+            } else if (randomNumber > 7000) {
+                map[x][y] = "groundLog";
+            } else {
+                map[x][y] = undefined;
+            }
+        }
+    }
+    console.log(map);
+
+    maps[currentMap] = map;
+    mapChanged = false;
 }
 
 function characterControls() {
@@ -100,9 +146,38 @@ function characterControls() {
     character.positionY += directionY;
 }
 
+function characterMovement() {
+    var thisMap = currentMap.split(',');
+    if (character.positionX < 0) {
+        character.positionX = canvas.width - character.width;
+        thisMap = [ parseInt(thisMap[0]) - 1 , thisMap[1]];
+        mapChanged = true;
+    } else if (character.positionX > canvas.width - character.width) {
+        character.positionX = 0;
+        thisMap = [ parseInt(thisMap[0]) + 1, thisMap[1]];
+        mapChanged = true;
+    } else if (character.positionY < 0) {
+        character.positionY = canvas.height - character.height;
+        thisMap = [thisMap[0], parseInt(thisMap[1]) - 1];
+        mapChanged = true;
+    } else if (character.positionY > canvas.height - character.height) {
+        character.positionY = 0;
+        thisMap = [thisMap[0], parseInt(thisMap[1]) + 1];
+        mapChanged = true;
+    }
+    currentMap = thisMap[0] + "," + thisMap[1];
+}
+
 function main() {
     characterControls();
+    characterMovement();
+    if (mapChanged) {
+        if (maps[currentMap] == undefined) {
+            mapGenerate();
+        }
+    }
     draw();
 }
+mapGenerate();
 draw();
 setInterval(main, 17);
