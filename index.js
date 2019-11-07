@@ -13,7 +13,6 @@ var framesByImage = 5;
 var attackFramesByImage = 3;
 var mapChanged = false;
 
-
 var maps = {
     "0,0": undefined
 }
@@ -37,23 +36,30 @@ var character = {
     moving: false,
     currentSprite: 0,
     attackSprite: undefined,
-    ready: false,
     direction: 0,
     attacking: false,
     attackPressed: false
 }
 
-var characterImage = new Image();
-characterImage.src = "sprites/characterMovement.png";
-characterImage.onload = function(){
-    character.ready = true;
-};
+var sprites = {
+    characterMovement: new Image(),
+    characterAttack: new Image(),
+    baby: new Image(),
+    skull: new Image(),
+    rock2: new Image(),
+    flowers2: new Image(),
+    flowers: new Image(),
+    rock: new Image(),
+    groundLog2: new Image(),
+    grass: new Image()
+}
 
-var backgroundImage = new Image();
-backgroundImage.src = "sprites/grass.png";
+for (spriteName in sprites) {
+    sprites[spriteName].src = "sprites/" + spriteName + ".png";
+}
 
-window.onkeyup = function (e) { console.log(e.keyCode); keys[e.keyCode] = false; }
-window.onkeydown = function (e) { console.log(e.keyCode); keys[e.keyCode] = true; }
+window.onkeyup = function (e) { keys[e.keyCode] = false; }
+window.onkeydown = function (e) { keys[e.keyCode] = true; }
 
 context = canvas.getContext('2d');
 
@@ -61,30 +67,26 @@ function draw() {
     clearCanvas();
     context.beginPath();
     context.textAlign = "center";
-    var pattern = context.createPattern(backgroundImage, 'repeat'); // Create a pattern with this image, and set it to "repeat".
+    var pattern = context.createPattern(sprites.grass, 'repeat'); // Create a pattern with this image, and set it to "repeat".
     context.fillStyle = pattern;
     context.fillRect(0, 0, canvas.width, canvas.height); // context.fillRect(x, y, width, height);
 
     maps[currentMap].forEach(function(y, indexY) {
         y.forEach(function(image, indexX) {
             if (image != undefined) {
-                var thisImage = new Image();
-                thisImage.src = "sprites/" + image + ".png";
-                context.drawImage(thisImage, 0, 0, thisImage.width, thisImage.height, indexX * 192, indexY * 108,  thisImage.width, thisImage.height);
+                context.drawImage(sprites[image], 0, 0, sprites[image].width, sprites[image].height, indexX * 192, indexY * 108,  sprites[image].width, sprites[image].height);
             }
         })
     })
 
     if (character.attacking) {
-        characterImage.src = "sprites/characterAttack2.png";
         character.spriteX = character.attackPositionsX[character.attackSprite];
         character.spriteY = character.attackPositionsY[character.direction];
-        context.drawImage(characterImage, character.spriteX, character.spriteY, character.attackWidth, character.attackHeight, character.positionX - 50, character.positionY, character.attackWidth, character.attackHeight);
+        context.drawImage(sprites.characterAttack, character.spriteX, character.spriteY, character.attackWidth, character.attackHeight, character.positionX - 50, character.positionY, character.attackWidth, character.attackHeight);
     } else {
-        characterImage.src = "sprites/characterMovement.png";
         character.spriteX = character.spritePositionsX[character.currentSprite];
         character.spriteY = character.spritePositionsY[character.direction];
-        context.drawImage(characterImage, character.spriteX, character.spriteY, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
+        context.drawImage(sprites.characterMovement, character.spriteX, character.spriteY, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
     }
 
     if (character.moving) {
@@ -191,7 +193,7 @@ function characterControls() {
     character.positionY += directionY;
 }
 
-function characterMovement() {
+function characterMove() {
     var thisMap = currentMap.split(',');
     if (character.positionX < 0) {
         character.positionX = canvas.width - character.width;
@@ -218,7 +220,7 @@ function main() {
     if (!character.attacking) {
         characterControls();
     }
-    characterMovement();
+    characterMove();
     if (mapChanged) {
         if (maps[currentMap] == undefined) {
             mapGenerate();
