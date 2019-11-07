@@ -5,10 +5,12 @@ var keyCode = {
     left: 37,
     up: 38,
     right: 39,
-    down: 40
+    down: 40,
+    space: 32
 }
 var canvas = document.getElementById('canvas');
 var framesByImage = 5;
+var attackFramesByImage = 3;
 var mapChanged = false;
 
 
@@ -23,15 +25,22 @@ var character = {
     spriteY: 0,
     width: 100,
     height: 200,
+    attackWidth: 200,
+    attackHeight: 200,
     moveSpeed: 7,
     positionX: canvas.width/2,
     positionY: canvas.height/2,
     spritePositionsX: [0, 100, 200, 300],
     spritePositionsY: [0, 200, 400, 600],
+    attackPositionsX: [0, 200, 400, 600],
+    attackPositionsY: [0, 200, 400, 600],
     moving: false,
     currentSprite: 0,
+    attackSprite: undefined,
     ready: false,
-    direction: 0
+    direction: 0,
+    attacking: false,
+    attackPressed: false
 }
 
 var characterImage = new Image();
@@ -66,22 +75,47 @@ function draw() {
         })
     })
 
-    character.spriteX = character.spritePositionsX[character.currentSprite];
-    character.spriteY = character.spritePositionsY[character.direction];
-    context.drawImage(characterImage, character.spriteX, character.spriteY, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
+    if (character.attacking) {
+        characterImage.src = "sprites/characterAttack2.png";
+        character.spriteX = character.attackPositionsX[character.attackSprite];
+        character.spriteY = character.attackPositionsY[character.direction];
+        context.drawImage(characterImage, character.spriteX, character.spriteY, character.attackWidth, character.attackHeight, character.positionX - 50, character.positionY, character.attackWidth, character.attackHeight);
+    } else {
+        characterImage.src = "sprites/characterMovement.png";
+        character.spriteX = character.spritePositionsX[character.currentSprite];
+        character.spriteY = character.spritePositionsY[character.direction];
+        context.drawImage(characterImage, character.spriteX, character.spriteY, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
+    }
+
     if (character.moving) {
-        if (character.currentSprite >= 2) {
-            character.currentSprite = 0;
+        if (framesByImage == 0) {
+            character.currentSprite++;
+            framesByImage = 5;
         } else {
-            if (framesByImage == 0) {
-                character.currentSprite++;
-                framesByImage = 5;
-            } else {
-                framesByImage--;
-            }
+            framesByImage--;
+        }
+        if (character.currentSprite >= 3 && framesByImage == 0) {
+            character.currentSprite = 0;
+            framesByImage = 5;
         }
     } else {
         character.currentSprite = 0;
+    }
+
+    if (character.attacking) {
+        if (attackFramesByImage == 0) {
+            character.attackSprite++;
+            attackFramesByImage = 3;
+        } else {
+            attackFramesByImage--;
+        }
+        if (character.attackSprite >= 3 && attackFramesByImage == 0) {
+            character.attackSprite = 0;
+            attackFramesByImage = 3;
+            character.attackPressed = false;
+        }
+    } else {
+        character.attackSprite = 0;
     }
 }
 
@@ -96,24 +130,37 @@ function mapGenerate() {
     for (x = 0; x < canvas.width / 192; x++) {
         map[x] = [];
         for (y = 0; y < canvas.height / 108; y++) {
-            randomNumber = Math.floor(Math.random() * 10000);
-            if (randomNumber > 9995) {
+            randomNumber = Math.floor(Math.random() * 100000);
+            if (randomNumber > 99995) {
                 map[x][y] = "baby";
-            } else if (randomNumber > 8500) {
-                map[x][y] = "flowers";
-            } else if (randomNumber > 8000) {
-                map[x][y] = "rock";
-            } else if (randomNumber > 7500) {
+            } else if (randomNumber > 99000) {
                 map[x][y] = "skull";
+            } else if (randomNumber > 98000) {
+                map[x][y] = "rock2";
+            } else if (randomNumber > 97000) {
+                map[x][y] = "flowers2";
+            } else if (randomNumber > 85000) {
+                map[x][y] = "flowers";
+            } else if (randomNumber > 80000) {
+                map[x][y] = "rock";
+            } else if (randomNumber > 77500) {
+                map[x][y] = "groundLog2";
             } else {
                 map[x][y] = undefined;
             }
         }
     }
-    console.log(map);
-
     maps[currentMap] = map;
     mapChanged = false;
+}
+
+function characterAttack(){
+    if (keys[keyCode.space]) {
+        character.attacking = true;
+        character.attackPressed = true;
+    } else if (character.attackSprite == 0 && character.attackPressed == false){
+        character.attacking = false;
+    }
 }
 
 function characterControls() {
@@ -167,7 +214,10 @@ function characterMovement() {
 }
 
 function main() {
-    characterControls();
+    characterAttack();
+    if (!character.attacking) {
+        characterControls();
+    }
     characterMovement();
     if (mapChanged) {
         if (maps[currentMap] == undefined) {
