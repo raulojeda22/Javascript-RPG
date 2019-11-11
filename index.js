@@ -38,7 +38,8 @@ var character = {
     attackSprite: undefined,
     direction: 0,
     attacking: false,
-    attackPressed: false
+    attackPressed: false,
+    alive: true
 }
 
 var sprites = {
@@ -51,7 +52,9 @@ var sprites = {
     flowers: new Image(),
     rock: new Image(),
     groundLog2: new Image(),
-    grass: new Image()
+    grass: new Image(),
+    enemy: new Image(),
+    deadEnemy: new Image()
 }
 
 for (spriteName in sprites) {
@@ -73,52 +76,132 @@ function draw() {
 
     maps[currentMap].forEach(function(y, indexY) {
         y.forEach(function(image, indexX) {
-            if (image != undefined) {
+            if (image != undefined && typeof(image) != "object") {
                 context.drawImage(sprites[image], 0, 0, sprites[image].width, sprites[image].height, indexX * 192, indexY * 108,  sprites[image].width, sprites[image].height);
             }
         })
     })
 
-    if (character.attacking) {
-        character.spriteX = character.attackPositionsX[character.attackSprite];
-        character.spriteY = character.attackPositionsY[character.direction];
-        context.drawImage(sprites.characterAttack, character.spriteX, character.spriteY, character.attackWidth, character.attackHeight, character.positionX - 50, character.positionY, character.attackWidth, character.attackHeight);
-    } else {
-        character.spriteX = character.spritePositionsX[character.currentSprite];
-        character.spriteY = character.spritePositionsY[character.direction];
-        context.drawImage(sprites.characterMovement, character.spriteX, character.spriteY, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
-    }
+    maps[currentMap].forEach(function(y) {
+        y.forEach(function(image) {
+            if (image != undefined && typeof(image) == "object") { //enemy
+                var differenceX = character.positionX - (image.positionX - 20);
+                var differenceY = character.positionY - (image.positionY + 60);
+                if (character.attacking) {
+                    if (character.direction == 3) {
+                        if (differenceX < 170 && differenceX > 0 && differenceY < 0 && differenceY > -140) {
+                            image.alive = false;
+                        }
+                    } else if (character.direction == 1) {
+                        if (differenceX > -100 && differenceX < 0 && differenceY < 0 && differenceY > -140) {
+                            image.alive = false;
+                        }
+                    } else if (character.direction == 2) {
+                        if (differenceX < 90 && differenceX > -90 && differenceY < 90 && differenceY > -60) {
+                            image.alive = false;
+                        }
+                    } else if (character.direction == 0) {
+                        if (differenceX < 90 && differenceX > -90 && differenceY < -60 && differenceY > -200) {
+                            image.alive = false;
+                        }
+                    }
+                }
+                if (image.alive) {
+                    if (differenceX < 110 && differenceX > -90 && differenceY < 0 && differenceY > -150) {
+                        character.alive = false;
+                    }
+                    if (character.positionX - image.positionX < 0) {
+                        image.positionX -= image.speed;
+                    } else if (character.positionX - image.positionX > 0) {
+                        image.positionX += image.speed;
+                    }
+                    if (character.positionY - image.positionY < 0) {
+                        image.positionY -= image.speed;
+                    } else if (character.positionY - image.positionY > 0) {
+                        image.positionY += image.speed;
+                    }
+                    printImage = sprites["enemy"];
+                } else {
+                    printImage = sprites["deadEnemy"];
+                }
+                context.drawImage(printImage, 0, 0, sprites["enemy"].width, sprites["enemy"].height, image.positionX - 20, image.positionY + 60,  sprites["enemy"].width, sprites["enemy"].height);
+            }
+        });
+    })
 
-    if (character.moving) {
-        if (framesByImage == 0) {
-            character.currentSprite++;
-            framesByImage = 5;
+    if (character.alive) {
+        if (character.attacking) {
+            character.spriteX = character.attackPositionsX[character.attackSprite];
+            character.spriteY = character.attackPositionsY[character.direction];
+            context.drawImage(sprites.characterAttack, character.spriteX, character.spriteY, character.attackWidth, character.attackHeight, character.positionX - 50, character.positionY, character.attackWidth, character.attackHeight);
         } else {
-            framesByImage--;
+            character.spriteX = character.spritePositionsX[character.currentSprite];
+            character.spriteY = character.spritePositionsY[character.direction];
+            context.drawImage(sprites.characterMovement, character.spriteX, character.spriteY, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
         }
-        if (character.currentSprite >= 3 && framesByImage == 0) {
+
+        if (character.moving) {
+            if (framesByImage == 0) {
+                character.currentSprite++;
+                framesByImage = 5;
+            } else {
+                framesByImage--;
+            }
+            if (character.currentSprite >= 3 && framesByImage == 0) {
+                character.currentSprite = 0;
+                framesByImage = 5;
+            }
+        } else {
             character.currentSprite = 0;
-            framesByImage = 5;
         }
-    } else {
-        character.currentSprite = 0;
-    }
 
-    if (character.attacking) {
-        if (attackFramesByImage == 0) {
-            character.attackSprite++;
-            attackFramesByImage = 3;
+        if (character.attacking) {
+            if (attackFramesByImage == 0) {
+                character.attackSprite++;
+                attackFramesByImage = 3;
+            } else {
+                attackFramesByImage--;
+            }
+            if (character.attackSprite >= 3 && attackFramesByImage == 0) {
+                character.attackSprite = 0;
+                attackFramesByImage = 3;
+                character.attackPressed = false;
+            }
         } else {
-            attackFramesByImage--;
-        }
-        if (character.attackSprite >= 3 && attackFramesByImage == 0) {
             character.attackSprite = 0;
-            attackFramesByImage = 3;
-            character.attackPressed = false;
         }
-    } else {
-        character.attackSprite = 0;
     }
+}
+
+
+/**
+ * Genera los enemigos aleatoriamente, cuanto más lejos estés del centro, más enemigos apareceran
+ * @param {object} map
+ * @return {object} map
+ */
+function generateEnemies(map) {
+    var x = 0;
+    var y = 0;
+    var thisMap = currentMap.split(',');
+    if (thisMap[0] == 0) thisMap[0] = 1;
+    if (thisMap[1] == 0) thisMap[1] = 1;
+    distanceFromCenter = Math.abs(parseInt(thisMap[0])) + Math.abs(parseInt(thisMap[1]));
+    if (distanceFromCenter > 100) distanceFromCenter = 100;
+    enemyPossibility = 1000 - distanceFromCenter
+    for (x = 0; x < canvas.width / 192; x++) {
+        for (y = 0; y < canvas.height / 108; y++) {
+            randomNumber = Math.floor(Math.random() * 1050);
+            if (randomNumber > enemyPossibility) {
+                map[x][y] = {
+                    positionX: x * 192,
+                    positionY: y * 108,
+                    speed: Math.floor(Math.random() * 2) + 1,
+                    alive: true
+                };
+            }
+        }
+    }
+    return map;
 }
 
 function clearCanvas () {
@@ -152,6 +235,7 @@ function mapGenerate() {
             }
         }
     }
+    map = generateEnemies(map);
     maps[currentMap] = map;
     mapChanged = false;
 }
