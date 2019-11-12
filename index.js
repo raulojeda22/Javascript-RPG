@@ -12,6 +12,7 @@ var canvas = document.getElementById('canvas');
 var framesByImage = 5;
 var attackFramesByImage = 3;
 var mapChanged = false;
+var youWin = false;
 
 var maps = {
     "0,0": undefined
@@ -45,7 +46,7 @@ var character = {
 var sprites = {
     characterMovement: new Image(),
     characterAttack: new Image(),
-    baby: new Image(),
+    babyDown: new Image(),
     skull: new Image(),
     rock2: new Image(),
     flowers2: new Image(),
@@ -54,7 +55,10 @@ var sprites = {
     groundLog2: new Image(),
     grass: new Image(),
     enemy: new Image(),
-    deadEnemy: new Image()
+    deadEnemy: new Image(),
+    deadCharacter: new Image(),
+    gameOver: new Image(),
+    youWin: new Image()
 }
 
 for (spriteName in sprites) {
@@ -76,12 +80,22 @@ function draw() {
 
     maps[currentMap].forEach(function(y, indexY) {
         y.forEach(function(image, indexX) {
-            if (image != undefined && typeof(image) != "object") {
+            if (image == "babyDown") {
+                var differenceX = character.positionX - (indexX * 192);
+                var differenceY = character.positionY - (indexY * 108);
+                if (differenceX < 110 && differenceX > -90 && differenceY < 0 && differenceY > -150) {
+                    youWin = true;
+                }
+            }
+            if ( !(image == "babyDown" && youWin) && image != undefined && typeof(image) != "object") {
                 context.drawImage(sprites[image], 0, 0, sprites[image].width, sprites[image].height, indexX * 192, indexY * 108,  sprites[image].width, sprites[image].height);
             }
         })
     })
 
+    if (!character.alive) {
+        context.drawImage(sprites.deadCharacter, 0, 0, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
+    }
     maps[currentMap].forEach(function(y) {
         y.forEach(function(image) {
             if (image != undefined && typeof(image) == "object") { //enemy
@@ -93,7 +107,7 @@ function draw() {
                             image.alive = false;
                         }
                     } else if (character.direction == 1) {
-                        if (differenceX > -100 && differenceX < 0 && differenceY < 0 && differenceY > -140) {
+                        if (differenceX > -120 && differenceX < 0 && differenceY < 0 && differenceY > -140) {
                             image.alive = false;
                         }
                     } else if (character.direction == 2) {
@@ -106,7 +120,7 @@ function draw() {
                         }
                     }
                 }
-                if (image.alive) {
+                if (image.alive && character.alive && !youWin ) {
                     if (differenceX < 110 && differenceX > -90 && differenceY < 0 && differenceY > -150) {
                         character.alive = false;
                     }
@@ -121,15 +135,28 @@ function draw() {
                         image.positionY += image.speed;
                     }
                     printImage = sprites["enemy"];
-                } else {
+                } else if (!image.alive){
                     printImage = sprites["deadEnemy"];
+                } else if (image.alive) {
+                    image.speed = 1;
+                    if (character.positionX - image.positionX < 0) {
+                        image.positionX += image.speed;
+                    } else if (character.positionX - image.positionX > 0) {
+                        image.positionX -= image.speed;
+                    }
+                    if (character.positionY - image.positionY < 0) {
+                        image.positionY += image.speed;
+                    } else if (character.positionY - image.positionY > 0) {
+                        image.positionY -= image.speed;
+                    }
+                    printImage = sprites["enemy"];
                 }
                 context.drawImage(printImage, 0, 0, sprites["enemy"].width, sprites["enemy"].height, image.positionX - 20, image.positionY + 60,  sprites["enemy"].width, sprites["enemy"].height);
             }
         });
     })
 
-    if (character.alive) {
+    if (character.alive && !youWin) {
         if (character.attacking) {
             character.spriteX = character.attackPositionsX[character.attackSprite];
             character.spriteY = character.attackPositionsY[character.direction];
@@ -170,6 +197,12 @@ function draw() {
         } else {
             character.attackSprite = 0;
         }
+    } else {
+        context.drawImage(sprites.gameOver, 0, 0, sprites.gameOver.width, sprites.gameOver.height, canvas.width/2 - sprites.gameOver.width/2, canvas.height/2 - sprites.gameOver.height/2,  sprites.gameOver.width, sprites.gameOver.height);
+    }
+    if (youWin) {
+        context.drawImage(sprites.youWin, 0, 0, sprites.youWin.width, sprites.youWin.height, canvas.width/2 - sprites.youWin.width/2, canvas.height/2 - sprites.youWin.height/2,  sprites.youWin.width, sprites.youWin.height);
+
     }
 }
 
@@ -190,7 +223,7 @@ function generateEnemies(map) {
     enemyPossibility = 1000 - distanceFromCenter
     for (x = 0; x < canvas.width / 192; x++) {
         for (y = 0; y < canvas.height / 108; y++) {
-            randomNumber = Math.floor(Math.random() * 1050);
+            randomNumber = Math.floor(Math.random() * 1000);
             if (randomNumber > enemyPossibility) {
                 map[x][y] = {
                     positionX: x * 192,
@@ -215,20 +248,20 @@ function mapGenerate() {
     for (x = 0; x < canvas.width / 192; x++) {
         map[x] = [];
         for (y = 0; y < canvas.height / 108; y++) {
-            randomNumber = Math.floor(Math.random() * 100000);
-            if (randomNumber > 99995) {
-                map[x][y] = "baby";
-            } else if (randomNumber > 99000) {
+            randomNumber = Math.floor(Math.random() * 10000);
+            if (randomNumber > 9995) {
+                map[x][y] = "babyDown";
+            } else if (randomNumber > 9900) {
                 map[x][y] = "skull";
-            } else if (randomNumber > 98000) {
+            } else if (randomNumber > 9800) {
                 map[x][y] = "rock2";
-            } else if (randomNumber > 97000) {
+            } else if (randomNumber > 9700) {
                 map[x][y] = "flowers2";
-            } else if (randomNumber > 85000) {
+            } else if (randomNumber > 8500) {
                 map[x][y] = "flowers";
-            } else if (randomNumber > 80000) {
+            } else if (randomNumber > 8000) {
                 map[x][y] = "rock";
-            } else if (randomNumber > 77500) {
+            } else if (randomNumber > 7750) {
                 map[x][y] = "groundLog2";
             } else {
                 map[x][y] = undefined;
@@ -300,11 +333,13 @@ function characterMove() {
 }
 
 function main() {
-    characterAttack();
-    if (!character.attacking) {
-        characterControls();
+    if (character.alive && !youWin) {
+        characterAttack();
+        if (!character.attacking) {
+            characterControls();
+        }
+        characterMove();
     }
-    characterMove();
     if (mapChanged) {
         if (maps[currentMap] == undefined) {
             mapGenerate();
