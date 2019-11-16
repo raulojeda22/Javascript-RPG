@@ -74,7 +74,7 @@ The main functions:
 
 ## Conclusions
 
-My main objectives where to copy the functionality of the Shell Script project that I did, I mainly did all of them and added new functionalities like saving the different maps on a map array and saving the game on local storage, the one functionality that left to put from the other game was to be able to select multiple weapons, but as I only had the animations of a sword, I didn't added the possibility of using different weapons into the game.
+My main objectives were to copy the functionality of the Shell Script project that I did, I mainly did all of them and added new functionalities like saving the different maps on a map array and saving the game on local storage, the one functionality that left to put from the other game was to be able to select multiple weapons, but as I only had the animations of a sword, I didn't added the possibility of using different weapons into the game.
 
 I think that the possibilites to improve this game are endless, probably games like Pokemon or The Legend Of Zelda started doing something like this and then started to add more and more features, sadly for me, time is the only thing that stops me from improving this game. The base functionality is there, adding more features to the game won't be much harder from here.
 
