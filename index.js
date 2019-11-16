@@ -1,7 +1,7 @@
 var canvas; //Declare canvas
 var context; //Declare context
 var keys = {}; //Initialize key object for storing the keys that are being pressed at the moment
-var keyCode = { //Key codes to handle presses
+const keyCode = { //Key codes to handle presses
     left: 37,
     up: 38,
     right: 39,
@@ -9,12 +9,12 @@ var keyCode = { //Key codes to handle presses
     space: 32,
     r: 82
 }
-var canvas = document.getElementById('canvas'); //Get canvas element
+canvas = document.getElementById('canvas'); //Get canvas element
 var framesByImage = 5; //The number of frames until the sprite image of the movement character changes
 var attackFramesByImage = 3; //The number of frames until the sprite image of the attack character changes
 var mapChanged = false; //Global variable storing wether the map has changed or not
 var youWin = false; //Store if the player won
-
+var saved = false; //Whether the game state has already been saved or not
 var maps = { //The map object storing all the maps content
     "0,0": undefined
 }
@@ -90,9 +90,10 @@ window.onkeydown = function (e) { //Add the key to the object when the user star
 
 context = canvas.getContext('2d'); // Create canvas context
 
-function draw() {
-    clearCanvas();
-    context.beginPath();
+/**
+ * Draws the background and the objects on the map that make it unique
+ */
+function drawContent() {
     context.textAlign = "center";
     var pattern = context.createPattern(sprites.grass, 'repeat'); // Create a pattern with the floor image, and set it to "repeat".
     context.fillStyle = pattern;
@@ -116,6 +117,12 @@ function draw() {
     if (!character.alive) { //If the character is dead, print it's dead body on the floor
         context.drawImage(sprites.deadCharacter, 0, 0, character.width, character.height, character.positionX, character.positionY, character.width, character.height);
     }
+}
+
+/**
+ * Draws the enemies on the map and animates it's movement
+ */
+function drawEnemies() {
     maps[currentMap].forEach(function(y) { //Print the enemies and it's movement
         y.forEach(function(image) {
             if (image != undefined && typeof(image) == "object") { //enemy
@@ -178,7 +185,12 @@ function draw() {
             }
         });
     })
+}
 
+/**
+ * Draws the character and it's movement and attacks
+ */
+function drawCharacter() {
     if (character.alive && !youWin) { //If the character is alive and the game is still running, unlock the character movement
         if (character.attacking) { //Draw the attack of the character with it's current sprite and position
             character.spriteX = character.attackSprite * character.height;
@@ -226,6 +238,17 @@ function draw() {
     if (youWin) { //Display win banner
         context.drawImage(sprites.youWin, 0, 0, sprites.youWin.width, sprites.youWin.height, canvas.width/2 - sprites.youWin.width/2, canvas.height/2 - sprites.youWin.height/2,  sprites.youWin.width, sprites.youWin.height);
     }
+}
+
+/**
+ * Draws everything to the canvas
+ */
+function draw() {
+    clearCanvas();
+    context.beginPath();
+    drawContent();
+    drawEnemies();
+    drawCharacter();
 }
 
 
@@ -371,6 +394,36 @@ function characterMove() {
 }
 
 /**
+ * Loads the last game state from localStorage
+ */
+function load() {
+    var gameState = JSON.parse(window.localStorage.getItem('gameState'));
+    if ( gameState != undefined) {
+        character = gameState.character;
+        maps = gameState.maps;
+        currentMap = gameState.currentMap;
+        youWin = gameState.youWin;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * Saves the current game state from localStorage
+ */
+function save() {
+    var gameState = {
+        character: character,
+        maps: maps,
+        currentMap: currentMap,
+        youWin: youWin
+    }
+    window.localStorage.setItem('gameState', JSON.stringify(gameState));
+    saved = true;
+}
+
+/**
  * Main function that is being executed every 17ms, this is the closest to 60 fps
  */
 function main() {
@@ -386,8 +439,18 @@ function main() {
             mapGenerate();
         }
     }
+    var pressingButton = false;
+    for (key in keys) {
+        if (keys[key] == true) pressingButton = true;
+    }
+    if (!pressingButton && saved == false) { //Only save the game once when the user stops givin input to the game, this way the game is not all the time reading and writing from localStorage
+        save();
+    } else if (pressingButton){
+        saved = false;
+    }
     draw();
 }
-mapGenerate(); //Generate first map
+loaded = load();
+if (!loaded) mapGenerate(); //Generate first map
 draw();
 setInterval(main, 17); //Start main loop
