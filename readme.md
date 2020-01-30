@@ -1,6 +1,8 @@
 # Javascript-RPG
 Small js project for the 2nd course of Development of Client Web Applications made by Raül Ojeda Gandia
 
+Link to the <a href="https://raulojeda22.github.io/Javascript-RPG/">game</a>
+
 ## Introduction
 I've always loved videogames and I actually got into programming for it, so I always enjoy to develop a new game on a new technology. Sadly, I don't have much time for it, so when the teacher told us that we could do whatever we wanted, I automatically thought in doing a videogame. I didn't had much ideas so I did a new version of a game I did in 1st of Microinformatic Systems and Networks for the /bin/bash command line using shell scripts, you can find the repo here: [Bash-Shell-RPG](https://github.com/raulojeda22/Bash-Shell-RPG)
 
